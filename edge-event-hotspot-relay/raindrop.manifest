@@ -1,0 +1,34 @@
+application "edge-event-hotspot-relay" {
+
+  mcp_service "event-relay-mcp" {
+    visibility = "public"
+  }
+
+  smartbucket "edge-events" {
+  }
+
+  smartbucket "alerts" {
+  }
+
+  smartsql "hotspot-db" {
+  }
+
+  observer "hotspot-aggregation-observer" {
+    source {
+      bucket = "edge-events"
+      rule {
+        actions = ["PutObject"]
+      }
+    }
+  }
+
+  observer "alert-generation-observer" {
+    source {
+      bucket = "edge-events"
+      rule {
+        actions = ["PutObject"]
+      }
+    }
+  }
+
+}
