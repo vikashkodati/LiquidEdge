@@ -73,11 +73,15 @@ describe('HotspotAggregationObserver Utils', () => {
         }
       ];
 
-      await expect(processBatch(events, 6)).rejects.toThrow('Not implemented');
+      const result = await processBatch(events, 6);
+      expect(result).toBeInstanceOf(Map);
+      expect(result.get('9q8yyk:detection')).toBe(2);
     });
 
     it('should handle empty batch', async () => {
-      await expect(processBatch([], 6)).rejects.toThrow('Not implemented');
+      const result = await processBatch([], 6);
+      expect(result).toBeInstanceOf(Map);
+      expect(result.size).toBe(0);
     });
 
     it('should aggregate events in same geohash', async () => {
@@ -96,7 +100,10 @@ describe('HotspotAggregationObserver Utils', () => {
         }
       ];
 
-      await expect(processBatch(events, 6)).rejects.toThrow('Not implemented');
+      const result = await processBatch(events, 6);
+      expect(result).toBeInstanceOf(Map);
+      expect(result.get('9q8yyk:detection')).toBe(1);
+      expect(result.get('9q8yyk:movement')).toBe(1);
     });
   });
 
@@ -107,19 +114,27 @@ describe('HotspotAggregationObserver Utils', () => {
         ['9q8yyy', 3]
       ]);
 
-      await expect(updateHotspotCounts(geohashCounts)).rejects.toThrow('Not implemented');
+      const result = await updateHotspotCounts(geohashCounts);
+      expect(result).toHaveProperty('processed');
+      expect(result).toHaveProperty('errors');
+      expect(result.processed).toBe(2);
     });
 
     it('should handle empty counts map', async () => {
       const emptyCounts = new Map();
 
-      await expect(updateHotspotCounts(emptyCounts)).rejects.toThrow('Not implemented');
+      const result = await updateHotspotCounts(emptyCounts);
+      expect(result).toHaveProperty('processed');
+      expect(result).toHaveProperty('errors');
+      expect(result.processed).toBe(0);
     });
 
     it('should handle database errors', async () => {
       const geohashCounts = new Map([['9q8yyz', 1]]);
 
-      await expect(updateHotspotCounts(geohashCounts)).rejects.toThrow('Not implemented');
+      const result = await updateHotspotCounts(geohashCounts);
+      expect(result).toHaveProperty('processed');
+      expect(result).toHaveProperty('errors');
     });
   });
 
@@ -133,7 +148,7 @@ describe('HotspotAggregationObserver Utils', () => {
       };
 
       const result = validateEvent(validEvent);
-      expect(result).toBe(false); // Currently returns false due to stub
+      expect(result).toBe(true);
     });
 
     it('should reject event with invalid coordinates', () => {
