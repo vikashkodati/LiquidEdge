@@ -295,8 +295,20 @@ function isValidSeverity(severity: string): severity is 'low' | 'medium' | 'high
   return ['low', 'medium', 'high', 'critical'].includes(severity);
 }
 
-// Implement test data generation
-export function generateTestEvent(bounds?: any, eventTypes?: string[]): EdgeEvent {
+/**
+ * Test data generation utilities
+ */
+
+/**
+ * Generates a random test edge event with optional constraints
+ * @param bounds - Geographic bounds to constrain coordinates
+ * @param eventTypes - Array of event types to choose from
+ * @returns A randomly generated edge event
+ */
+export function generateTestEvent(
+  bounds?: { north: number; south: number; east: number; west: number },
+  eventTypes?: string[]
+): EdgeEvent {
   const defaultBounds = {
     north: 90,
     south: -90,
@@ -304,21 +316,67 @@ export function generateTestEvent(bounds?: any, eventTypes?: string[]): EdgeEven
     west: -180
   };
   
-  const effectiveBounds = bounds || defaultBounds;
   const defaultEventTypes = ['detection', 'movement', 'anomaly'];
-  const effectiveEventTypes = eventTypes || defaultEventTypes;
   
-  // Generate random coordinates within bounds
-  const latitude = Math.random() * (effectiveBounds.north - effectiveBounds.south) + effectiveBounds.south;
-  const longitude = Math.random() * (effectiveBounds.east - effectiveBounds.west) + effectiveBounds.west;
+  // Use provided bounds or default to global bounds
+  const effectiveBounds = bounds || defaultBounds;
   
-  // Pick random event type
-  const eventType = effectiveEventTypes[Math.floor(Math.random() * effectiveEventTypes.length)];
+  // Validate bounds if provided
+  if (bounds && !isValidBounds(bounds)) {
+    throw new Error('Invalid bounds for test event generation');
+  }
+  
+  // Use provided event types or defaults
+  const effectiveEventTypes = eventTypes && eventTypes.length > 0 
+    ? eventTypes 
+    : defaultEventTypes;
+  
+  // Generate random coordinates within the specified bounds
+  const coordinates = generateRandomCoordinates(effectiveBounds);
+  
+  // Select random event type
+  const eventType = selectRandomEventType(effectiveEventTypes);
   
   return {
-    id: `test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    id: generateUniqueId(),
     timestamp: Date.now(),
-    location: { latitude, longitude },
+    location: coordinates,
     event_type: eventType
   };
+}
+
+/**
+ * Generates random coordinates within given bounds
+ */
+function generateRandomCoordinates(
+  bounds: { north: number; south: number; east: number; west: number }
+): { latitude: number; longitude: number } {
+  const latRange = bounds.north - bounds.south;
+  const lngRange = bounds.east - bounds.west;
+  
+  const latitude = Math.random() * latRange + bounds.south;
+  const longitude = Math.random() * lngRange + bounds.west;
+  
+  return { latitude, longitude };
+}
+
+/**
+ * Selects a random event type from the provided array
+ */
+function selectRandomEventType(eventTypes: string[]): string {
+  if (eventTypes.length === 0) {
+    throw new Error('Event types array cannot be empty');
+  }
+  
+  const randomIndex = Math.floor(Math.random() * eventTypes.length);
+  return eventTypes[randomIndex];
+}
+
+/**
+ * Generates a unique identifier for test events
+ */
+function generateUniqueId(): string {
+  const timestamp = Date.now();
+  const randomSuffix = Math.random().toString(36).substring(2, 11);
+  return `test-${timestamp}-${randomSuffix}`;
 }
